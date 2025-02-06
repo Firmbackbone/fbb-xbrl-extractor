@@ -1,12 +1,6 @@
 *__pycache__
-
 *.DS_Store
 
 *.pdf
-*.csv
-*.zip
-*.xbrl
-*.xml
-*.log
 
 .venv
