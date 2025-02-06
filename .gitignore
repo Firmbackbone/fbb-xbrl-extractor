@@ -1,0 +1,11 @@
+*__pycache__
+
+logs/*
+data/*
+
+*.DS_Store
+
+*.pdf
+*.csv
+
+.venv
