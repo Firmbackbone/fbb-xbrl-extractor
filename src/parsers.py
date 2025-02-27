@@ -13,6 +13,7 @@ from tqdm import tqdm
 sys.path.append(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 from conf import CONFIG
+from src.utils import get_asset_group, revert_decimal
 
 
 class XBRLParser:
@@ -63,30 +64,57 @@ class XBRLParser:
 
             csv_name = xbrl_name if not csv_name else csv_name
             if not value:
-                logger.warning(f'{xbrl_name} not found.')
+                logger.warning(f'{xbrl_name} not found in {file_path}.')
             entity_data[csv_name] = value
 
-        for element in root.xpath(".//*[starts-with(local-name(), 'Assets')]"):
+        assets_namespaces = {'jenv-bw2-i': 'http://example.com/jenv-bw2-i'}
+        assets_expr = "//*[contains(name(), ':')][@contextRef and @decimals and @unitRef]"
+        for element in root.xpath(assets_expr, namespaces=assets_namespaces):
             asset_name = element.tag.split('}')[-1]
-            asset_value = element.text.strip() if element.text else None
+            asset_raw_value = element.text.strip() if element.text else None
             asset_context = element.get("contextRef")
+            asset_currency_context = element.get("unitRef")
+            asset_decimals = element.get('decimals')
 
             context_element = root.xpath(f".//*[@id='{asset_context}']")
-            asset_date = None
-
+            asset_start_date = None
+            asset_end_date = None
             for element in context_element:
-                date_element = element.xpath(".//*[local-name()='instant']")
-                if date_element:
-                    asset_date = date_element[0].text.strip()
+                instant_date_element = element.xpath(".//*[local-name()='instant']")
+                start_date_element = element.xpath(".//*[local-name()='startDate']")
+                end_date_element = element.xpath(".//*[local-name()='endDate']")
+
+                if instant_date_element:
+                    asset_end_date = instant_date_element[0].text.strip()
+                if start_date_element:
+                    asset_start_date = start_date_element[0].text.strip()
+                if end_date_element:
+                    end_date_element = end_date_element[0].text.strip()
+
+            currency_context_element = root.xpath(f".//*[@id='{asset_currency_context}']")
+            asset_currency = asset_currency_context
+            for element in currency_context_element:
+                currency_element = element.xpath(".//*[local-name()='measure']")
+                if currency_element:
+                    asset_currency = currency_element[0].text.split(':')[-1]
                 break
 
-            asset_data = copy(entity_data)
-            asset_data.update({'AssetType': asset_name,
-                               'AssetValue': asset_value,
-                               'AssetDate': asset_date})
-            result_list.append(asset_data)
+            if asset_currency != 'pure':
+                asset_value = revert_decimal(asset_raw_value, asset_decimals)
+                asset_group = get_asset_group(asset_name)
 
-            logger.debug(f"Found asset data: {asset_name}")
+                asset_data = copy(entity_data)
+                asset_data.update({
+                    'AssetGroup': asset_group,
+                    'AssetType': asset_name,
+                    'AssetValue': asset_value,
+                    'AssetCurrency': asset_currency,
+                    'AssetStartDate': asset_start_date,
+                    'AssetEndDate': asset_end_date,
+                })
+                result_list.append(asset_data)
+
+                logger.debug(f"Found asset data: {asset_name} in {file_path}")
 
     @staticmethod
     def _save_to_csv(result_list: list, logger: Logger) -> None:

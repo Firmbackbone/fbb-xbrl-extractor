@@ -21,5 +21,46 @@ CONFIG = {
         'PlaceOfResidenceNL': '',
         'CountryName': '',
         'BusinessNames': '',
+        'SbiBusinessCode': '',
     },
+    'balancesheet_columns': {
+        'assets': {
+            'Assets',
+            'AssetsCurrent',
+            'AssetsCurrentOther',
+            'AssetsNoncurrent',
+            'AssetsNoncurrentOther',
+            'ConstructionContractsAssets',
+            'DepreciationPropertyPlantEquipmentAmortisationIntangibleAssets',
+            'DepreciationPropertyPlantEquipmentAmortisationIntangibleAssetsBreakdown',
+            'FinancialAssets',
+            'FinancialAssetsOther',
+            'TangibleAssetsOther',
+        },
+        'liabilities': {
+            'ConstructionContractsAccumulatedProjectRevenuesRecordedAsLiability',
+            'ConstructionContractsLiabilities',
+            'ConstructionContractsProgressBillingsRecordedAsLiability',
+            'Liabilities',
+            'LiabilitiesCurrent',
+            'LiabilitiesMaturityExceedingFiveYears',
+            'LiabilitiesMaturityExceedingOneYear',
+            'LiabilitiesMaturityLessThanOneYear',
+            'LiabilitiesNoncurrent',
+        },
+        'equities': {
+            'Equity',
+            'EquityAndLiabilities',
+            'EquityDividendDistribution',
+            'EquityMovement',
+            'EquityMovementOther',
+            'EquityResultAllocation',
+            'CashAndCashEquivalents',
+            'CashAndCashEquivalentsCashFlow',
+            'IncreaseDecreaseCashAndCashEquivalents',
+        }
+    }
+
+    # TODO balance columns
+    # TODO profit columns
 }
