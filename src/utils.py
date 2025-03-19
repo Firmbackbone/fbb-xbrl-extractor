@@ -53,13 +53,17 @@ def get_asset_group(asset_name: str) -> str:
     :param asset_name: Name of the asset.
     :return: Assigned group (or Others if not found).
     """
-    asset_group = 'Other'
-    if asset_name in CONFIG['balancesheet_columns']['assets']:
-        asset_group = 'Asset'
-    elif asset_name in CONFIG['balancesheet_columns']['liabilities']:
-        asset_group = 'Liability'
-    elif asset_name in CONFIG['balancesheet_columns']['equities']:
-        asset_group = 'Equity'
+    asset_group = 'others'
+    for asset in CONFIG['balancesheet_columns'].keys():
+        if asset_name in CONFIG['balancesheet_columns'][asset]:
+            asset_group = asset
+            break
+    # if asset_name in CONFIG['balancesheet_columns']['assets']:
+    #     asset_group = 'Asset'
+    # elif asset_name in CONFIG['balancesheet_columns']['liabilities']:
+    #     asset_group = 'Liability'
+    # elif asset_name in CONFIG['balancesheet_columns']['equities']:
+    #     asset_group = 'Equity'
 
     return asset_group
 

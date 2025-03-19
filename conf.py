@@ -60,7 +60,4 @@ CONFIG = {
             'IncreaseDecreaseCashAndCashEquivalents',
         }
     }
-
-    # TODO balance columns
-    # TODO profit columns
 }
