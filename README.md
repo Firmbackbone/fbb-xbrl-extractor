@@ -2,7 +2,7 @@
 
 ## XBRL Files Extractor
 
-...
+A tool for extracting XBRL data from compressed archives. It automates file extraction, parses key financial data, and saves it in a structured format (currently .csv) for analysis. Configurable via a settings file, it supports logging and organized data storage.
 
 ### Table of Contents
 
@@ -12,7 +12,7 @@
 
 ### Run
 
-...
+The environment can be created either from the ```environment.yml``` file or by manually installing packages from ```requirements.txt```. Then just run ```main.py```. Don't forget to add a config file to suit your needs.
 
 ### Config
 
@@ -22,7 +22,7 @@ Program can be adjusted using the ```conf.py``` file. Most important fields to e
 - ```'data': 'zip_path'```:       path to the folder containing the zip files to be extracted
 - ```'data': 'dest_path'```:      path to the desired folder for saving extracted XBRL files
 - ```'base_columns'```:           list of fields to extract from xbrl and their names in the final table (same as field if empty)
-- ```'balancesheet_columns'```:   list of groups with list of columns assigned to this group, if column is not in any list, given group is *others*
+- ```'balancesheet_columns'```:   list of groups with list of columns assigned to this group, if column is not in any list, given group is ***others***
 
 ### Structure
 
