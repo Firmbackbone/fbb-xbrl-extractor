@@ -2,22 +2,19 @@ from logging import Logger
 import os
 import uuid
 import zipfile
+from io import BytesIO
 
 from tqdm import tqdm
 
 
 class ZipXMLExtractor:
-    """Utility class to extract .xbrl files from ZIP archives."""
+    """Utility class to extract .xbrl files from ZIP archives, including nested ZIPs."""
 
     @staticmethod
     def extract(source_path: str, dest_path: str, logger: Logger) -> None:
         """
-        Extracts .xbrl files from ZIP archives in a source directory
+        Extracts .xbrl files from ZIP archives (including nested ZIPs) in a source directory
         to a destination directory.
-
-        :param source_path: Path to the directory containing ZIP files.
-        :param dest_path: Path to the directory for extracted files.
-        :param logger: Logger instance for logging.
         """
         os.makedirs(dest_path, exist_ok=True)
         logger.debug(f"Destination directory '{dest_path}' created.")
@@ -38,31 +35,46 @@ class ZipXMLExtractor:
 
             if zipfile.is_zipfile(file_path):
                 logger.debug(f"Processing ZIP file: {file_name}")
-                ZipXMLExtractor._extract_zip(file_path, dest_path, logger)
+                try:
+                    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                        ZipXMLExtractor._extract_zip_archive(zip_ref, dest_path, logger)
+                except zipfile.BadZipFile as e:
+                    logger.error(f"Invalid ZIP file '{file_name}': {e}")
             else:
                 logger.warning(f"Skipping non-ZIP file: {file_name}")
 
     @staticmethod
-    def _extract_zip(file_path: str, dest_path: str, logger: Logger) -> None:
-        """Extracts .xbrl files from a single ZIP file."""
-        try:
-            with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                xbrl_files = [
-                    member for member in zip_ref.namelist()
-                    if member.endswith('.xbrl') and not member.endswith('/')
-                ]
+    def _extract_zip_archive(zip_ref: zipfile.ZipFile, dest_path: str, logger: Logger) -> None:
+        """
+        Extracts .xbrl files from a zipfile.ZipFile object. If a nested ZIP file is found,
+        it is processed recursively.
+        """
+        for member in zip_ref.namelist():
+            # Skip directory entries
+            if member.endswith('/'):
+                continue
 
-                if not xbrl_files:
-                    logger.warning(f"No .xbrl files in ZIP: {os.path.basename(file_path)}")
-                    return
+            # Process nested ZIP file
+            if member.lower().endswith('.zip'):
+                logger.debug(f"Found nested ZIP: {member}")
+                try:
+                    # Read the nested zip file into memory
+                    nested_zip_data = zip_ref.read(member)
+                    with BytesIO(nested_zip_data) as nested_file:
+                        with zipfile.ZipFile(nested_file, 'r') as nested_zip:
+                            ZipXMLExtractor._extract_zip_archive(nested_zip, dest_path, logger)
+                except Exception as e:
+                    logger.error(f"Error processing nested ZIP '{member}': {e}")
+                continue
 
-                for member in xbrl_files:
-                    output_file_path = os.path.join(dest_path, f"{uuid.uuid4().hex}.xbrl")
-                    try:
-                        with zip_ref.open(member) as source, open(output_file_path, 'wb') as target:
-                            target.write(source.read())
-                        logger.info(f"Extracted {member} to '{output_file_path}'")
-                    except Exception as e:
-                        logger.error(f"Error extracting '{member}': {e}")
-        except zipfile.BadZipFile as e:
-            logger.error(f"Invalid ZIP file '{file_path}': {e}")
+            # Extract .xbrl files
+            if member.lower().endswith('.xbrl'):
+                output_file_path = os.path.join(dest_path, f"{uuid.uuid4().hex}.xbrl")
+                try:
+                    with zip_ref.open(member) as source, open(output_file_path, 'wb') as target:
+                        target.write(source.read())
+                    logger.info(f"Extracted {member} to '{output_file_path}'")
+                except Exception as e:
+                    logger.error(f"Error extracting '{member}': {e}")
+            else:
+                logger.debug(f"Skipping non-.xbrl and non-ZIP member: {member}")

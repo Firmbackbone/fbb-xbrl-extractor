@@ -5,7 +5,7 @@ CONFIG = {
         'level': 10,
     },
     'data': {
-        'zip_path': 'data/XBRL Sample',
+        'zip_path': 'data/test',
         'dest_path': 'data/extracted_xbrl',
     },
     'base_columns': {
